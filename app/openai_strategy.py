@@ -35,6 +35,16 @@ class OpenAIStrategy:
             response.raise_for_status()
             body = response.json()
 
-        text = body["output"][0]["content"][0]["text"]
+        text = body.get("output_text")
+        if not text:
+            output = body.get("output", [])
+            if output:
+                content = output[0].get("content", [])
+                if content:
+                    text = content[0].get("text")
+
+        if not text:
+            raise ValueError("OpenAI response did not include parseable text output")
+
         data = json.loads(text)
         return TradeIdea(**data)

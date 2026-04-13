@@ -4,7 +4,7 @@ A Python app that proposes and (only with human approval) executes Kraken spot t
 
 ## Important note on Python version
 You requested **Python 9.14.4**, but Python major version 9 does not exist.
-This project is configured for **Python 3.14.x** in `pyproject.toml`.
+This project is configured for **Python 3.10+** in `pyproject.toml`.
 
 ## What this bot enforces
 - Blocks withdrawal endpoints in code (`Withdraw*` is denied).
