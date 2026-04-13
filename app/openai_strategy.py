@@ -9,7 +9,9 @@ from app.models import TradeIdea
 
 class OpenAIStrategy:
     def __init__(self, api_key: str) -> None:
-        self.api_key = api_key
+        self.api_key = api_key.strip()
+        if not self.api_key:
+            raise ValueError("OPENAI_API_KEY is empty. Set it in your .env before running analysis.")
 
     def generate_trade_idea(self, pair: str, latest_price: float) -> TradeIdea:
         prompt = (
