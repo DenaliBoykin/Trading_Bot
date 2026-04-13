@@ -52,6 +52,8 @@ class Settings:
 
     def validate(self) -> list[str]:
         errors: list[str] = []
+        if not self.openai_api_key.strip():
+            errors.append("OPENAI_API_KEY is required to analyze market ideas")
         if self.max_trade_usd > 200:
             errors.append("MAX_TRADE_USD must be <= 200")
         if self.max_trades_per_hour > 5:

@@ -9,7 +9,9 @@ from app.models import TradeIdea
 
 class OpenAIStrategy:
     def __init__(self, api_key: str) -> None:
-        self.api_key = api_key
+        self.api_key = api_key.strip()
+        if not self.api_key:
+            raise ValueError("OPENAI_API_KEY is empty. Set it in your .env before running analysis.")
 
     def generate_trade_idea(self, pair: str, latest_price: float) -> TradeIdea:
         prompt = (
@@ -35,6 +37,16 @@ class OpenAIStrategy:
             response.raise_for_status()
             body = response.json()
 
-        text = body["output"][0]["content"][0]["text"]
+        text = body.get("output_text")
+        if not text:
+            output = body.get("output", [])
+            if output:
+                content = output[0].get("content", [])
+                if content:
+                    text = content[0].get("text")
+
+        if not text:
+            raise ValueError("OpenAI response did not include parseable text output")
+
         data = json.loads(text)
         return TradeIdea(**data)
