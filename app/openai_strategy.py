@@ -33,6 +33,23 @@ class OpenAIStrategy:
                     "model": "gpt-5-mini",
                     "input": prompt,
                     "max_output_tokens": 250,
+                    "text": {
+                        "format": {
+                            "type": "json_schema",
+                            "name": "trade_idea",
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": False,
+                                "required": ["pair", "side", "confidence", "rationale"],
+                                "properties": {
+                                    "pair": {"type": "string"},
+                                    "side": {"type": "string", "enum": ["buy", "sell"]},
+                                    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                                    "rationale": {"type": "string"},
+                                },
+                            },
+                        }
+                    },
                 },
             )
             response.raise_for_status()
@@ -47,7 +64,7 @@ class OpenAIStrategy:
                 f"(status={debug_status}, keys={list(body.keys())})"
             )
 
-        data = json.loads(self._strip_json_fences(text))
+        data = self._coerce_json_object(text)
         return TradeIdea(**data)
 
     @staticmethod
@@ -144,3 +161,23 @@ class OpenAIStrategy:
             return None
 
         return None
+
+    @staticmethod
+    def _coerce_json_object(text: str) -> dict[str, Any]:
+        cleaned = OpenAIStrategy._strip_json_fences(text)
+        try:
+            parsed = json.loads(cleaned)
+            if isinstance(parsed, dict):
+                return parsed
+        except json.JSONDecodeError:
+            pass
+
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            snippet = cleaned[start : end + 1]
+            parsed = json.loads(snippet)
+            if isinstance(parsed, dict):
+                return parsed
+
+        raise ValueError("OpenAI response text did not contain a valid JSON object")
